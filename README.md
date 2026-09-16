@@ -109,5 +109,4 @@ Handles sending notifications to users based on events or actions in the applica
 - CloudWatch
 
 ## Infrastructure
-
-Terraform implementation will be added after the architecture and deployment design are completed.
+later 
