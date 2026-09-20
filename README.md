@@ -87,6 +87,10 @@ CodeDeploy manages the blue/green deployment process. It coordinates the deploym
 
 ---
 
+## LifeTime
+### Traffic Lifetime
+### Deployment Lifetime
+
 ## Microservices
 
 ### Auth Service
