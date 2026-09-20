@@ -2,6 +2,22 @@
 
 AWS containerized microservices architecture using ECS Fargate, ALB, Cloud Map service discovery, Redis, and GitHub Actions CI/CD.
 
+## Microservices
+- Auth Service: Handles user authentication and authorization, such as login and validating user access.
+- Orders Service: Handles creating, retrieving, and managing user orders.
+- Notifications Service: Handles sending notifications to users based on events or actions in the application.
+
+## AWS Services
+- ECS Fargate
+- ECR
+- ALB
+- Cloud Map
+- Secrets Manager
+- ElastiCache Redis
+- X-Ray
+- CloudWatch
+
+
 ## Architecture
 
 ![Architecture Diagram](diagrams/architecure.jpg)
@@ -90,27 +106,6 @@ CodeDeploy manages the blue/green deployment process. It coordinates the deploym
 ## LifeTime
 ### Traffic Lifetime
 ### Deployment Lifetime
-
-## Microservices
-
-### Auth Service
-Handles user authentication and authorization, such as login and validating user access.
-
-### Orders Service
-Handles creating, retrieving, and managing user orders.
-
-### Notifications Service
-Handles sending notifications to users based on events or actions in the application.
-
-## AWS Services
-- ECS Fargate
-- ECR
-- ALB
-- Cloud Map
-- Secrets Manager
-- ElastiCache Redis
-- X-Ray
-- CloudWatch
 
 ## Infrastructure
 later 
