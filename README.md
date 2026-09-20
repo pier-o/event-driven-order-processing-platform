@@ -1,6 +1,10 @@
-# ECS Fargate Microservices
+## Solution Overview
 
-AWS containerized microservices architecture using ECS Fargate, ALB, Cloud Map service discovery, Redis, and GitHub Actions CI/CD.
+The Event-Driven Order Processing Platform provides a containerized backend for an online ordering application. It allows authenticated users to create, view, and manage orders while receiving notifications when important order events occur.
+
+The platform is built as a set of independent microservices, with each service responsible for a specific business function. Synchronous requests are handled through an Application Load Balancer, while asynchronous order events are distributed through an event-driven architecture. This allows services to remain loosely coupled and scale independently as the workload increases.
+
+The solution is designed to provide high availability, secure communication, centralized session management, reliable data storage, and application observability. It also includes automated container deployment and blue/green releases to allow new application versions to be deployed with minimal disruption to users.
 
 ## Microservices
 - Auth Service: Handles user authentication and authorization, such as login and validating user access.
@@ -53,8 +57,6 @@ For communication between the microservices, I’m using AWS Cloud Map for servi
 Each service gets its own DNS name, so the services don’t need to know the IP addresses of individual Fargate Tasks. For example, the Orders service can use auth.myapp.local to find the Auth service, while the other services can use orders.myapp.local and notifications.myapp.local when they need to communicate with them.
 
 #### 5. Shared Data & Secrets  
-
-I’m using ElastiCache Redis as a shared session store for the microservices. Since the Fargate Tasks are stateless, the session data is stored in Redis so any Task can access it when needed.
 
 I’m using ElastiCache Redis as a shared session store for the microservices. This prevents the Fargate Tasks from storing session data in their own memory, so the Tasks can remain stateless.
 
