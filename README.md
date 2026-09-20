@@ -17,9 +17,16 @@ The solution is designed to provide high availability, secure communication, cen
 - ALB
 - Cloud Map
 - Secrets Manager
-- ElastiCache Redis
+- Amazon ElastiCache for Redis
 - X-Ray
 - CloudWatch
+- ACM
+- Route 53
+- SQS
+- SNS
+- WAF
+- Amazon RDS for PostgreSQL
+- EventBridge
 
 
 ## Architecture
