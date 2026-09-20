@@ -65,6 +65,7 @@ For sensitive information like database credentials and API keys, I’m using AW
 I’m using X-Ray to trace requests across the microservices and see where a request goes or where a problem happens. 
 I’m also using CloudWatch for logs, metrics, and monitoring the health of the application.
 
+#### Traffic Lifetime
 ---
 
 ## CI/CD & Blue/Green Deployment
@@ -101,11 +102,9 @@ The ALB has a Production Listener and a Test Listener. The Production Listener s
 
 CodeDeploy manages the blue/green deployment process. It coordinates the deployment, validation, and traffic shift. If there is a problem with the new version, the deployment can be rolled back to the previous version.
 
+#### Deployment Lifetime
+
 ---
 
-## LifeTime
-### Traffic Lifetime
-### Deployment Lifetime
-
 ## Infrastructure
-later 
+Terraform
