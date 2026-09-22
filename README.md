@@ -62,16 +62,15 @@ The public subnets contain the internet-facing ALB and a NAT Gateway. The Intern
 
 Amazon Route 53 provides the application domain and resolves it to the ALB. The client then sends an HTTPS request to the ALB.
 
-AWS WAF protects the ALB by filtering incoming web requests. AWS ACM provides the TLS certificate used by the ALB HTTPS listener.
+AWS WAF protects the ALB by filtering incoming web requests.
+AWS ACM provides the TLS certificate used by the ALB HTTPS listener.
 
 The Auth, Orders, and Notifications Fargate Tasks run in the private subnets across both AZs, keeping the application workloads isolated from direct internet access.
 
 #### 2. Routing
-
 The Application Load Balancer uses path-based routing to send requests to the correct microservice.
 
 For example:
-
 * `/api/auth` → Auth TG
 * `/api/orders` → Orders TG
 * `/api/notifications` → Notifications TG
@@ -90,7 +89,10 @@ Amazon ECR stores the Docker images used by the ECS services.
 
 AWS Cloud Map provides private service discovery between the microservices. It is used because Fargate Tasks can be replaced or scaled, so services should not depend on fixed task IP addresses.
 
-Each ECS Service is registered with a Cloud Map service and receives a private DNS name such as `auth.myapp.local`, `orders.myapp.local`, and `notifications.myapp.local`.
+Each ECS Service is registered with a Cloud Map service and receives a private DNS name such as:
+- `auth.myapp.local`
+- `orders.myapp.local`
+- `notifications.myapp.local`
 
 For example, the Orders Service can use `auth.myapp.local` to communicate with the Auth Service.
 
@@ -197,21 +199,23 @@ This allows both versions to run at the same time during the deployment.
 
 The Application Load Balancer uses a production listener rule for production traffic and an optional test listener rule for testing the Green revision.
 
-After the Green revision is ready, ECS shifts production traffic from the Blue Target Group to the Green Target Group. After the configured bake time, the old Blue revision can be removed.
+After the Green revision is ready and passes validation, ECS shifts production traffic from the Blue Target Group to the Green Target Group. After the configured bake time, the old Blue revision can be removed.
 
-This allows the new version to be tested before it becomes the production version and keeps the previous version available during the deployment.
+If the new version has a problem during the deployment, traffic can be shifted back to the Blue revision, allowing the previous version to continue serving the application.
 
 ---
 
 ## Infrastructure as Code
 
-The AWS infrastructure is managed using **Terraform**. Keeping the infrastructure as code makes the environment easier to reproduce, review, and update.
+The AWS infrastructure is managed using **Terraform**. Keeping the infrastructure as code makes the environment easier to reproduce, review, and update.
 
 The complete Terraform configuration is available in the repository.
 
+[Terraform folder structure screenshot]
+
 ### Terraform Deployment
 
-The infrastructure can be initialized, reviewed, and applied with:
+The infrastructure can be initialized, planned, and applied with:
 
 ```bash
 terraform init
@@ -219,12 +223,11 @@ terraform plan
 terraform apply
 ```
 
-After applying the configuration, the AWS Console can be used to verify the created resources.
+[Terraform apply result screenshot]
 
-A Terraform apply result such as:
+After applying the configuration, use the AWS Console to verify the created resources.
 
-```text
-Apply complete! Resources: XX added, 0 changed, 0 destroyed.
-```
+The ECS cluster runs the three application services: **Auth, Orders, and Notifications**.
 
-can be used as proof that Terraform successfully created the infrastructure.
+[ECS running services screenshot]
+
