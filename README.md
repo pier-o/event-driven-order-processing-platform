@@ -1,80 +1,157 @@
+# Event-Driven Order Processing Platform
+
 ## Solution Overview
 
-The Event-Driven Order Processing Platform provides a containerized backend for an online ordering application. It allows authenticated users to create, view, and manage orders while receiving notifications when important order events occur.
+The Event-Driven Order Processing Platform provides a containerized backend for an online ordering application. It uses three microservices to handle authentication, order management, and notifications, with asynchronous event processing to keep services loosely coupled.
 
-The platform is built as a set of independent microservices, with each service responsible for a specific business function. Synchronous requests are handled through an Application Load Balancer, while asynchronous order events are distributed through an event-driven architecture. This allows services to remain loosely coupled and scale independently as the workload increases.
-
-The solution is designed to provide high availability, secure communication, centralized session management, reliable data storage, and application observability. It also includes automated container deployment and blue/green releases to allow new application versions to be deployed with minimal disruption to users.
+The platform is designed for high availability, scalability, secure communication, persistent data storage, and centralized monitoring. Infrastructure is managed with Terraform, while GitHub Actions automates container builds and ECS deployments using blue/green releases.
 
 ## Microservices
-- Auth Service: Handles user authentication and authorization, such as login and validating user access.
-- Orders Service: Handles creating, retrieving, and managing user orders.
-- Notifications Service: Handles sending notifications to users based on events or actions in the application.
+
+* **Auth Service:** Handles user authentication, authorization, and session management.
+* **Orders Service:** Handles creating, retrieving, updating, and managing user orders.
+* **Notifications Service:** Processes notification events and publishes notifications to subscribed delivery channels.
 
 ## AWS Services
-- ECS Fargate
-- ECR
-- ALB
-- Cloud Map
-- Secrets Manager
-- Amazon ElastiCache for Redis
-- X-Ray
-- CloudWatch
-- ACM
-- Route 53
-- SQS
-- SNS
-- WAF
-- Amazon RDS for PostgreSQL
-- EventBridge
 
+### Networking & Application Access
+
+* Amazon VPC
+* Internet Gateway
+* NAT Gateway
+* Application Load Balancer
+* Amazon Route 53
+* AWS WAF
+* AWS Certificate Manager
+
+### Compute & Containers
+
+* Amazon ECS
+* AWS Fargate
+* Amazon ECR
+
+### Service Communication & Events
+
+* AWS Cloud Map
+* Amazon EventBridge
+* Amazon SQS
+* Amazon SNS
+
+### Data & Secrets
+
+* Amazon RDS for PostgreSQL
+* Amazon ElastiCache for Redis
+* AWS Secrets Manager
+
+### Monitoring & Tracing
+
+* Amazon CloudWatch
+* AWS X-Ray
 
 ## Architecture
 
 ![Architecture Diagram](diagrams/architecure.jpg)
 
-### Architecture Explanation  
-#### 1. Network
+### Architecture Explanation
 
-The first part is the network setup. I’m using a VPC across two Availability Zones so the application can remain available even if one AZ becomes unavailable. Each AZ has a public subnet and a private subnet.
+#### 1. Network & Secure Entry
 
-The public subnets contain the NAT Gateways, while the Application Load Balancer is also attached to the public subnets so it can receive external requests. The Internet Gateway provides the connection between the VPC and the internet, while the NAT Gateways allow the private application Tasks to make outbound internet connections without exposing them directly to the internet.
+The application runs inside an Amazon VPC spanning two Availability Zones. Each AZ contains a public subnet and a private subnet.
 
-The Auth, Orders, and Notifications Fargate Tasks run in the private subnets in both Availability Zones. This keeps the application workloads isolated from direct internet access while allowing them to communicate internally within the VPC.
+The public subnets contain the internet-facing ALB and a NAT Gateway. The Internet Gateway provides connectivity between the VPC and the internet, while the NAT Gateways allow resources in the private subnets to make outbound internet connections without exposing them directly to the internet.
 
+Amazon Route 53 provides the application domain and resolves it to the ALB. The client then sends an HTTPS request to the ALB.
+
+AWS WAF protects the ALB by filtering incoming web requests. AWS ACM provides the TLS certificate used by the ALB HTTPS listener.
+
+The Auth, Orders, and Notifications Fargate Tasks run in the private subnets across both AZs, keeping the application workloads isolated from direct internet access.
 
 #### 2. Routing
 
-The Application Load Balancer uses path-based routing to send incoming requests to the correct microservice. For example, requests to `/api/auth` are sent to the Auth Target Group, `/api/orders` goes to the Orders Target Group, and `/api/notifications` goes to the Notifications Target Group.
+The Application Load Balancer uses path-based routing to send requests to the correct microservice.
 
-Each Target Group is associated with the corresponding Fargate Tasks running in the private subnets, so the ALB can forward the request to a healthy Task of that service.
+For example:
+
+* `/api/auth` → Auth TG
+* `/api/orders` → Orders TG
+* `/api/notifications` → Notifications TG
+
+Each target group routes requests to the corresponding Fargate Tasks. ALB health checks help ensure that traffic is sent only to healthy tasks.
 
 #### 3. ECS & Fargate
 
-The ECS Cluster is used to organize and manage the three microservices (Auth, Orders, and Notifications). Each service manages its Fargate Tasks and keeps them running.
+Amazon ECS organizes and manages the Auth, Orders, and Notifications services. Each service maintains its required number of Fargate Tasks.
 
-The Fargate Tasks are distributed across the private subnets in both Availability Zones, which gives each service multiple running instances and helps keep the application available. Fargate handles the underlying infrastructure needed to run the containers.
+AWS Fargate runs the containers without requiring us to manage the underlying servers. The tasks are placed across the private subnets in both Availability Zones to improve availability and allow the services to scale.
 
-So basically, it’s **ECS Cluster + ECS Services + Fargate Tasks (running in the private subnets).**
+Amazon ECR stores the Docker images used by the ECS services.
 
 #### 4. Service Discovery
 
-For communication between the microservices, I’m using AWS Cloud Map for service discovery. When creating each ECS Service, I enable service discovery and associate it with a Cloud Map service.
+AWS Cloud Map provides private service discovery between the microservices. It is used because Fargate Tasks can be replaced or scaled, so services should not depend on fixed task IP addresses.
 
-Each service gets its own DNS name, so the services don’t need to know the IP addresses of individual Fargate Tasks. For example, the Orders service can use auth.myapp.local to find the Auth service, while the other services can use orders.myapp.local and notifications.myapp.local when they need to communicate with them.
+Each ECS Service is registered with a Cloud Map service and receives a private DNS name such as `auth.myapp.local`, `orders.myapp.local`, and `notifications.myapp.local`.
 
-#### 5. Shared Data & Secrets  
+For example, the Orders Service can use `auth.myapp.local` to communicate with the Auth Service.
 
-I’m using ElastiCache Redis as a shared session store for the microservices. This prevents the Fargate Tasks from storing session data in their own memory, so the Tasks can remain stateless.
+#### 5. Data, Sessions & Secrets
 
-For sensitive information like database credentials and API keys, I’m using AWS Secrets Manager. This prevents sensitive information from being hardcoded in the application and provides better security. 
+Amazon RDS for PostgreSQL provides persistent storage for application data. The Auth Service uses it for user and account data, while the Orders Service uses it for order data.
 
-#### 6. Monitoring
+Amazon ElastiCache for Redis provides a shared session store for the microservices. Session data is kept outside the Fargate Tasks so the services remain stateless and any task can access the required session information.
 
-I’m using X-Ray to trace requests across the microservices and see where a request goes or where a problem happens. 
-I’m also using CloudWatch for logs, metrics, and monitoring the health of the application.
+AWS Secrets Manager stores sensitive values such as database credentials and API keys. The ECS services retrieve the secrets they need at runtime instead of storing them in the source code or container images.
 
-#### Traffic Lifetime
+#### 6. Observability
+
+Amazon CloudWatch provides centralized logs, metrics, and monitoring for the application and infrastructure.
+
+AWS X-Ray provides distributed tracing across the microservices. It helps trace requests between services and makes it easier to find latency or failures.
+
+---
+
+## Event-Driven Order Processing
+
+![Event-driven Diagram](diagrams/event-driven-diagram.jpg)
+
+### Event Flow Explanation
+
+#### 1. Order Event Creation
+
+When an authenticated user creates an order, the request is handled by the Orders Service.
+
+The Orders Service validates and stores the order in Amazon RDS for PostgreSQL. After the order is created, the service publishes an `OrderCreated` event to Amazon EventBridge.
+
+EventBridge is used here so the Orders Service does not need to directly depend on the Notifications Service.
+
+#### 2. Event Routing
+
+Amazon EventBridge receives the `OrderCreated` event and checks it against the configured event rules.
+
+The matching rule sends the event to the Notifications SQS queue. This separates the Orders Service from the notification processing system.
+
+#### 3. Asynchronous Processing
+
+Amazon SQS provides a durable queue between the Orders Service and Notifications Service.
+
+The Notifications Service polls the queue and processes the messages independently. This allows notification processing to continue separately from order creation and helps handle temporary delays or increases in traffic.
+
+A dead-letter queue can be used for messages that repeatedly fail processing.
+
+#### 4. Notification Processing
+
+The Notifications Service receives the order event from SQS and decides what notification should be sent.
+
+After processing the event, the service publishes the notification to the Order Notifications SNS topic.
+
+#### 5. Notification Fan-Out
+
+Amazon SNS distributes the notification to multiple subscribers.
+
+The topic can be connected to different notification channels, such as **Email, SMS, and Mobile notifications**.
+
+This allows the Notifications Service to publish one notification while SNS handles delivery to the configured subscribers.
+
 ---
 
 ## CI/CD & Blue/Green Deployment
@@ -83,37 +160,71 @@ I’m also using CloudWatch for logs, metrics, and monitoring the health of the 
 
 ### CI/CD Explanation
 
-#### 1. Code Source
+#### 1. Continuous Integration
 
-The process starts with the Developer pushing the code to the GitHub repository. This push triggers the GitHub Actions workflow.
+The process starts when a developer pushes code to the GitHub repository.
 
-#### 2. CI
+The push triggers a GitHub Actions workflow that:
 
-GitHub Actions handles the CI process. It runs the tests, builds the application, builds the Docker image, and pushes the image to ECR.
+* Runs application tests
+* Builds the application
+* Builds the Docker image
+* Pushes the container image to Amazon ECR
 
-#### 3. Docker & ECR
+#### 2. Container Image Registry
 
-Docker is used to build the application into a container image, and ECR is used to store the new image so it can be used for deployment in AWS.
+Amazon ECR stores the container images produced by the CI pipeline.
 
-#### 4. ECS Deployment
+The image is versioned so the correct application version can be referenced by the ECS Task Definition used for deployment.
 
-After the new image is pushed to ECR, GitHub Actions registers a new ECS Task Definition revision that uses the new image. This new revision is then used to deploy the new version of the service.
+#### 3. ECS Deployment
 
-#### 5. Blue/Green Deployment
+After the new image is pushed to ECR, GitHub Actions registers a new ECS Task Definition revision that references the new image.
 
-Each service has its own Blue and Green Target Groups: Auth Blue/Green, Orders Blue/Green, and Notifications Blue/Green. The current version is running in the Blue Target Group, while the Green Target Group is empty at the start of the deployment. The new Fargate Tasks are then created using the new Task Definition and attached to the Green Target Group. Both versions run side by side during the deployment, with the Tasks running in the private subnets.
+The new Task Definition revision is then used to update the ECS Service and start the deployment.
 
-#### 6. Traffic
+#### 4. Blue/Green Deployment
 
-The ALB has a Production Listener and a Test Listener. The Production Listener sends normal user traffic to the current version, while the Test Listener sends traffic to the new version through the Green Target Group so it can be tested before it receives production traffic.
+The ECS Service uses the native ECS blue/green deployment strategy.
 
-#### 7. CodeDeploy
+The current version continues running as the **Blue** revision while ECS creates the new **Green** revision using the updated Task Definition.
 
-CodeDeploy manages the blue/green deployment process. It coordinates the deployment, validation, and traffic shift. If there is a problem with the new version, the deployment can be rolled back to the previous version.
+The Green Tasks are registered with the alternate target group and can be tested before production traffic is moved to the new version.
 
-#### Deployment Lifetime
+This allows both versions to run at the same time during the deployment.
+
+#### 5. Traffic Shift & Validation
+
+The Application Load Balancer uses a production listener rule for production traffic and an optional test listener rule for testing the Green revision.
+
+After the Green revision is ready, ECS shifts production traffic from the Blue Target Group to the Green Target Group. After the configured bake time, the old Blue revision can be removed.
+
+This allows the new version to be tested before it becomes the production version and keeps the previous version available during the deployment.
 
 ---
 
-## Infrastructure
-Terraform
+## Infrastructure as Code
+
+The AWS infrastructure is managed using **Terraform**. Keeping the infrastructure as code makes the environment easier to reproduce, review, and update.
+
+The complete Terraform configuration is available in the repository.
+
+### Terraform Deployment
+
+The infrastructure can be initialized, reviewed, and applied with:
+
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+After applying the configuration, the AWS Console can be used to verify the created resources.
+
+A Terraform apply result such as:
+
+```text
+Apply complete! Resources: XX added, 0 changed, 0 destroyed.
+```
+
+can be used as proof that Terraform successfully created the infrastructure.
