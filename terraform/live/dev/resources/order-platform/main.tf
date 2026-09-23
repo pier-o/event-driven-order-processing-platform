@@ -59,7 +59,9 @@ module "order_platform" {
   notify_repository_url = data.terraform_remote_state.ecr.outputs.notifications_repository_url
 
   execution_role_arn = data.terraform_remote_state.iam.outputs.ecs_execution_role_arn
+  ecs_load_balancer_role_arn =  data.terraform_remote_state.iam.outputs.ecs_load_balancer_role_arn
   task_role_arn = data.terraform_remote_state.iam.outputs.ecs_task_role_arn
+
 
   image_tag = var.image_tag
 }

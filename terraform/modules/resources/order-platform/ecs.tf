@@ -38,7 +38,7 @@ resource "aws_ecs_task_definition" "auth" {
 
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.auth.name
-          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-region"        = data.aws_region.current.region
           "awslogs-stream-prefix" = "ecs"
         }
       }
@@ -82,7 +82,7 @@ resource "aws_ecs_task_definition" "order" {
 
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.order.name
-          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-region"        = data.aws_region.current.region
           "awslogs-stream-prefix" = "ecs"
         }
       }
@@ -124,7 +124,7 @@ resource "aws_ecs_task_definition" "notify" {
 
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.notify.name
-          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-region"        = data.aws_region.current.region
           "awslogs-stream-prefix" = "ecs"
         }
       }
@@ -142,9 +142,16 @@ resource "aws_ecs_service" "auth" {
   task_definition = aws_ecs_task_definition.auth.arn
 
   desired_count = var.desired_count
-
   launch_type   = "FARGATE"
   
+  deployment_controller {
+    type = "ECS"
+  }
+  
+  deployment_configuration {
+    strategy                = "BLUE_GREEN"
+    bake_time_in_minutes    = 5
+  }
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -156,6 +163,12 @@ resource "aws_ecs_service" "auth" {
     target_group_arn = aws_lb_target_group.auth.arn
     container_name   = "auth"
     container_port   = var.container_port
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.auth_green.arn
+      production_listener_rule   = aws_lb_listener_rule.auth.arn
+      role_arn                   = var.ecs_load_balancer_role_arn
+    }
   }
 
   tags = {
@@ -169,9 +182,16 @@ resource "aws_ecs_service" "order" {
   task_definition = aws_ecs_task_definition.order.arn
 
   desired_count = var.desired_count
-
   launch_type      = "FARGATE"
-  
+
+  deployment_controller {
+    type = "ECS"
+  }
+
+  deployment_configuration {
+    strategy                = "BLUE_GREEN"
+    bake_time_in_minutes    = 5
+  }
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -183,6 +203,12 @@ resource "aws_ecs_service" "order" {
     target_group_arn = aws_lb_target_group.order.arn
     container_name   = "order"
     container_port   = var.container_port
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.order_green.arn
+      production_listener_rule   = aws_lb_listener_rule.order.arn
+      role_arn                   = var.ecs_load_balancer_role_arn
+    }
   }
 
   tags = {
@@ -196,9 +222,16 @@ resource "aws_ecs_service" "notify" {
   task_definition = aws_ecs_task_definition.notify.arn
 
   desired_count = var.desired_count
-
   launch_type      = "FARGATE"
   
+  deployment_controller {
+  type = "ECS"
+  }
+
+  deployment_configuration {
+    strategy                = "BLUE_GREEN"
+    bake_time_in_minutes    = 5
+  }
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -210,6 +243,12 @@ resource "aws_ecs_service" "notify" {
     target_group_arn = aws_lb_target_group.notify.arn
     container_name   = "notify"
     container_port   = var.container_port
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.notify_green.arn
+      production_listener_rule   = aws_lb_listener_rule.notify.arn
+      role_arn                   = var.ecs_load_balancer_role_arn
+    }
   }
 
   tags = {

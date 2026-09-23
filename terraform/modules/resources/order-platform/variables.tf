@@ -36,6 +36,11 @@ variable "ecs_security_group_id" {
   type        = string
 }
 
+variable "ecs_load_balancer_role_arn" {
+  description = "ARN of the ECS infrastructure role for load balancer management"
+  type        = string
+}
+
 variable "execution_role_arn" {
   description = "ARN of the ECS task execution IAM role"
   type        = string
