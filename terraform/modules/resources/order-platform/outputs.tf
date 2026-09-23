@@ -1,3 +1,4 @@
+# ECS
 output "ecs_cluster_id" {
   description = "ID of the ECS cluster"
   value       = aws_ecs_cluster.main.id
@@ -31,4 +32,31 @@ output "alb_dns_name" {
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
   value       = aws_lb.main.arn
+}
+
+# Cloud Map
+output "cloud_map_namespace_id" {
+  description = "ID of the Cloud Map private DNS namespace"
+  value       = aws_service_discovery_private_dns_namespace.main.id
+}
+
+output "auth_service_discovery_name" {
+  description = "DNS name of the Auth service"
+  value       = "auth.${aws_service_discovery_private_dns_namespace.main.name}"
+}
+
+output "order_service_discovery_name" {
+  description = "DNS name of the Orders service"
+  value       = "order.${aws_service_discovery_private_dns_namespace.main.name}"
+}
+
+output "notify_service_discovery_name" {
+  description = "DNS name of the Notifications service"
+  value       = "notify.${aws_service_discovery_private_dns_namespace.main.name}"
+}
+
+# Secret Manager
+output "application_secret_arn" {
+  description = "ARN of the application Secrets Manager secret"
+  value       = aws_secretsmanager_secret.application.arn
 }

@@ -159,6 +159,10 @@ resource "aws_ecs_service" "auth" {
     assign_public_ip = false
   }
 
+  service_registries {
+    registry_arn = aws_service_discovery_service.auth.arn
+  }
+
   load_balancer {
     target_group_arn = aws_lb_target_group.auth.arn
     container_name   = "auth"
@@ -199,6 +203,10 @@ resource "aws_ecs_service" "order" {
     assign_public_ip = false
   }
 
+  service_registries {
+    registry_arn = aws_service_discovery_service.order.arn
+  }
+
   load_balancer {
     target_group_arn = aws_lb_target_group.order.arn
     container_name   = "order"
@@ -237,6 +245,10 @@ resource "aws_ecs_service" "notify" {
     subnets          = var.private_subnet_ids
     security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
+  }
+  
+  service_registries {
+    registry_arn = aws_service_discovery_service.notify.arn
   }
 
   load_balancer {
