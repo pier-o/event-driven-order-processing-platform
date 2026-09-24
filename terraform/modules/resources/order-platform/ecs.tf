@@ -17,7 +17,7 @@ resource "aws_ecs_task_definition" "auth" {
   memory = var.task_memory
 
   execution_role_arn = var.execution_role_arn
-  task_role_arn      = var.task_role_arn
+  task_role_arn      = var.auth_task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -27,9 +27,11 @@ resource "aws_ecs_task_definition" "auth" {
 
       portMappings = [
         {
+          name          = "http"
           containerPort = var.container_port
           hostPort      = var.container_port
           protocol      = local.protocol_tcp
+          appProtocol   = "http"
         }
       ]
       
@@ -61,7 +63,7 @@ resource "aws_ecs_task_definition" "order" {
   memory = var.task_memory
 
   execution_role_arn = var.execution_role_arn
-  task_role_arn      = var.task_role_arn
+  task_role_arn      = var.order_task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -69,11 +71,36 @@ resource "aws_ecs_task_definition" "order" {
       image     = "${var.order_repository_url}:${var.image_tag}"
       essential = true
 
+      environment = [
+        {
+          name  = "EVENT_BUS_NAME"
+          value = aws_cloudwatch_event_bus.main.name
+        },
+        {
+          name  = "DB_HOST"
+          value = var.db_host
+        },
+        {
+          name  = "DB_PORT"
+          value = tostring(var.db_port)
+        },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        },
+        {
+          name  = "DB_SECRET_ARN"
+          value = var.db_secret_arn
+        }
+      ]
+
       portMappings = [
         {
+          name          = "http"
           containerPort = var.container_port
           hostPort      = var.container_port
           protocol      = local.protocol_tcp
+          appProtocol   = "http"
         }
       ]
 
@@ -103,7 +130,7 @@ resource "aws_ecs_task_definition" "notify" {
   memory = var.task_memory
 
   execution_role_arn = var.execution_role_arn
-  task_role_arn      = var.task_role_arn
+  task_role_arn      = var.notify_task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -111,11 +138,24 @@ resource "aws_ecs_task_definition" "notify" {
       image     = "${var.notify_repository_url}:${var.image_tag}"
       essential = true
 
+      environment = [
+        {
+          name  = "SQS_QUEUE_URL"
+          value = aws_sqs_queue.notifications.url
+        },
+        {
+          name  = "SNS_TOPIC_ARN"
+          value = aws_sns_topic.order_notifications.arn
+        }
+      ]
+
       portMappings = [
         {
+          name          = "http"
           containerPort = var.container_port
           hostPort      = var.container_port
           protocol      = local.protocol_tcp
+          appProtocol   = "http"
         }
       ]
 
@@ -159,9 +199,20 @@ resource "aws_ecs_service" "auth" {
     assign_public_ip = false
   }
 
-  service_registries {
-    registry_arn = aws_service_discovery_service.auth.arn
-  }
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_private_dns_namespace.main.arn
+
+    service {
+      port_name      = "http"
+      discovery_name = "auth"
+
+      client_alias {
+        dns_name = "auth"
+        port     = 80
+      }
+    }
+ }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.auth.arn
@@ -203,8 +254,19 @@ resource "aws_ecs_service" "order" {
     assign_public_ip = false
   }
 
-  service_registries {
-    registry_arn = aws_service_discovery_service.order.arn
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_private_dns_namespace.main.arn
+
+    service {
+      port_name      = "http"
+      discovery_name = "order"
+
+      client_alias {
+        dns_name = "order"
+        port     = 80
+      }
+    }
   }
 
   load_balancer {
@@ -246,9 +308,20 @@ resource "aws_ecs_service" "notify" {
     security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
-  
-  service_registries {
-    registry_arn = aws_service_discovery_service.notify.arn
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_private_dns_namespace.main.arn
+
+    service {
+      port_name      = "http"
+      discovery_name = "notify"
+
+      client_alias {
+        dns_name = "notify"
+        port     = 80
+      }
+    }
   }
 
   load_balancer {

@@ -60,3 +60,24 @@ output "application_secret_arn" {
   description = "ARN of the application Secrets Manager secret"
   value       = aws_secretsmanager_secret.application.arn
 }
+
+# Messaging
+output "event_bus_arn" {
+  description = "ARN of the application EventBridge event bus"
+  value       = aws_cloudwatch_event_bus.main.arn
+}
+
+output "notifications_queue_url" {
+  description = "URL of the Notifications SQS queue"
+  value       = aws_sqs_queue.notifications.url
+}
+
+output "notifications_queue_arn" {
+  description = "ARN of the Notifications SQS queue"
+  value       = aws_sqs_queue.notifications.arn
+}
+
+output "order_notifications_topic_arn" {
+  description = "ARN of the SNS topic used for order notifications"
+  value       = aws_sns_topic.order_notifications.arn
+}

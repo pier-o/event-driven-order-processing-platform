@@ -46,10 +46,19 @@ variable "execution_role_arn" {
   type        = string
 }
 
-variable "task_role_arn" {
-  description = "ARN of the ECS task IAM role"
+variable "auth_task_role_arn" {
+  description = "ARN of the Auth ECS task role"
   type        = string
-  default     = null
+}
+
+variable "order_task_role_arn" {
+  description = "ARN of the Orders ECS task role"
+  type        = string
+}
+
+variable "notify_task_role_arn" {
+  description = "ARN of the Notifications ECS task role"
+  type        = string
 }
 
 variable "auth_repository_url" {
@@ -94,6 +103,27 @@ variable "desired_count" {
   description = "Number of Fargate tasks for each service"
   type        = number
   default     = 1
+}
+
+# DB
+variable "db_host" {
+  description = "PostgreSQL RDS endpoint"
+  type        = string
+}
+
+variable "db_port" {
+  description = "PostgreSQL port"
+  type        = number
+}
+
+variable "db_name" {
+  description = "PostgreSQL database name"
+  type        = string
+}
+
+variable "db_secret_arn" {
+  description = "Secrets Manager ARN containing the RDS credentials"
+  type        = string
 }
 
 locals {
