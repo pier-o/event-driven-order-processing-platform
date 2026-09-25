@@ -1,6 +1,6 @@
-output "redis_endpoint" {
-  description = "Redis primary endpoint"
-  value       = module.redis.redis_endpoint
+output "redis_host" {
+  description = "Redis host"
+  value       = module.redis.redis_host
 }
 
 output "redis_port" {

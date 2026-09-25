@@ -7,6 +7,7 @@ variable "private_subnet_ids" {
   description = "The IDs of the private subnets"
   type        = list(string)
 }
+
 variable "db_name" {
   description = "The Database Name"
   type        = string

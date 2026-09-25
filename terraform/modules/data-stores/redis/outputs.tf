@@ -1,5 +1,5 @@
-output "redis_endpoint" {
-  description = "Redis primary endpoint"
+output "redis_host" {
+  description = "Redis primary host endpoint"
   value       = aws_elasticache_replication_group.redis.primary_endpoint_address
 }
 

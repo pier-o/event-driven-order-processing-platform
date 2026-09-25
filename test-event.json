@@ -1,8 +1,0 @@
-[
-    {
-        "Detail":  "{\"customer_id\":\"debug-user\",\"items\":[{\"quantity\":1,\"product\":\"test-keyboard\"}],\"order_id\":\"manual-test\"}",
-        "EventBusName":  "order-platform-dev-events",
-        "Source":  "order-service",
-        "DetailType":  "OrderCreated"
-    }
-]

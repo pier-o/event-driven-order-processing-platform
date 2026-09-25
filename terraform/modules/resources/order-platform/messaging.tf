@@ -36,7 +36,6 @@ resource "aws_cloudwatch_event_rule" "order_created" {
 
   event_pattern = jsonencode({
     source = ["order-service"]
-
     "detail-type" = ["OrderCreated"]
   })
 }

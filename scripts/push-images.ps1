@@ -13,8 +13,7 @@ $AccountId = aws sts get-caller-identity --query Account --output text
 
 $Registry = "$AccountId.dkr.ecr.$AwsRegion.amazonaws.com"
 
-aws ecr get-login-password --region $AwsRegion |
-    docker login --username AWS --password-stdin $Registry
+cmd /c "aws ecr get-login-password --region $AwsRegion | docker login --username AWS --password-stdin $Registry"
 
 docker tag "order-platform-auth:$ImageTag" "$AuthRepo`:$ImageTag"
 docker tag "order-platform-order:$ImageTag" "$OrderRepo`:$ImageTag"

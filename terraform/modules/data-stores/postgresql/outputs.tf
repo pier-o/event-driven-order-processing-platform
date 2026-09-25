@@ -1,5 +1,5 @@
-output "db_endpoint" {
-  description = "RDS PostgreSQL endpoint"
+output "db_host" {
+  description = "RDS PostgreSQL host address"
   value       = aws_db_instance.postgres.address
 }
 

@@ -1,5 +1,5 @@
-output "db_endpoint" {
-  value = module.postgresql.db_endpoint
+output "db_host" {
+  value = module.postgresql.db_host
 }
 
 output "db_port" {

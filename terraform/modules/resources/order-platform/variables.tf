@@ -126,6 +126,17 @@ variable "db_secret_arn" {
   type        = string
 }
 
+#Redis
+variable "redis_host" {
+  description = "Redis host endpoint"
+  type        = string
+}
+
+variable "redis_port" {
+  description = "redis port"
+  type        = number
+}
+
 locals {
   port_http    = 80
   port_all     = 0

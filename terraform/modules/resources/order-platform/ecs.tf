@@ -25,6 +25,33 @@ resource "aws_ecs_task_definition" "auth" {
       image     = "${var.auth_repository_url}:${var.image_tag}"
       essential = true
 
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = var.db_host
+        },
+        {
+          name  = "DB_PORT"
+          value = tostring(var.db_port)
+        },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        },
+        {
+          name  = "DB_SECRET_ARN"
+          value = var.db_secret_arn
+        },
+        {
+          name  = "REDIS_HOST"
+          value = var.redis_host
+        },
+        {
+          name  = "REDIS_PORT"
+          value = tostring(var.redis_port)
+        },
+      ]
+
       portMappings = [
         {
           name          = "http"
@@ -46,8 +73,6 @@ resource "aws_ecs_task_definition" "auth" {
       }
     }
   ])
-
-  
 
   tags = {
     Name = "${var.name}-auth-task"
@@ -91,7 +116,15 @@ resource "aws_ecs_task_definition" "order" {
         {
           name  = "DB_SECRET_ARN"
           value = var.db_secret_arn
-        }
+        },
+        {
+          name  = "REDIS_HOST"
+          value = var.redis_host
+        },
+        {
+          name  = "REDIS_PORT"
+          value = tostring(var.redis_port)
+        },
       ]
 
       portMappings = [

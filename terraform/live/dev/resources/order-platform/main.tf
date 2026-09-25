@@ -62,6 +62,16 @@ data "terraform_remote_state" "postgresql" {
   }
 }
 
+data "terraform_remote_state" "redis" {
+  backend = "s3"
+
+  config = {
+    bucket = var.terraform_state_bucket
+    key    = "dev/data-stores/redis/terraform.tfstate"
+    region = var.aws_region
+  }
+}
+
 module "order_platform" {
   source = "../../../../modules/resources/order-platform"
 
@@ -86,8 +96,11 @@ module "order_platform" {
 
   image_tag = var.image_tag
 
-  db_host       = data.terraform_remote_state.postgresql.outputs.db_endpoint
+  db_host       = data.terraform_remote_state.postgresql.outputs.db_host
   db_port       = data.terraform_remote_state.postgresql.outputs.db_port
   db_name       = data.terraform_remote_state.postgresql.outputs.db_name
   db_secret_arn = data.terraform_remote_state.postgresql.outputs.master_user_secret_arn
+
+  redis_host = data.terraform_remote_state.redis.outputs.redis_host
+  redis_port = data.terraform_remote_state.redis.outputs.redis_port
 }

@@ -147,3 +147,24 @@ resource "aws_iam_role_policy" "notify_sns" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "auth_secretsmanager" {
+  name = "${var.name}-auth-secretsmanager"
+  role = aws_iam_role.auth_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [
+      {
+        Effect = "Allow"
+
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+
+        Resource = var.db_secret_arn
+      }
+    ]
+  })
+}

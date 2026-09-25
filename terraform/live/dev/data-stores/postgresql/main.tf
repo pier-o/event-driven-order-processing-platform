@@ -30,6 +30,5 @@ module "postgresql" {
   db_username = "order_platform_admin"
   
   private_subnet_ids = data.terraform_remote_state.networking.outputs.private_subnet_ids
-
   postgres_security_group_id = data.terraform_remote_state.security.outputs.postgres_security_group_id
 }
