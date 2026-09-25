@@ -103,4 +103,6 @@ module "order_platform" {
 
   redis_host = data.terraform_remote_state.redis.outputs.redis_host
   redis_port = data.terraform_remote_state.redis.outputs.redis_port
+  
+  notification_email = var.notification_email
 }

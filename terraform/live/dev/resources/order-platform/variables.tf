@@ -14,3 +14,9 @@ variable "image_tag" {
   description = "Docker image tag to deploy"
   type        = string
 }
+
+variable "notification_email" {
+  description = "Email address for order notifications"
+  type        = string
+  sensitive   = true
+}

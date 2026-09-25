@@ -148,3 +148,10 @@ locals {
   target_ip = "ip"
   cidr_all  = ["0.0.0.0/0"]
 }
+
+#Messaging
+variable "notification_email" {
+  description = "Email address for order notifications"
+  type        = string
+  sensitive   = true
+}
