@@ -15,6 +15,6 @@ data "terraform_remote_state" "networking" {
 module "security" {
   source = "../../../modules/security"
 
-  name = "order-platform-dev"
+  name   = "order-platform-dev"
   vpc_id = data.terraform_remote_state.networking.outputs.vpc_id
 }

@@ -50,6 +50,14 @@ resource "aws_ecs_task_definition" "auth" {
           name  = "REDIS_PORT"
           value = tostring(var.redis_port)
         },
+        {
+          name  = "AWS_XRAY_DAEMON_ADDRESS"
+          value = "127.0.0.1:2000"
+        },
+        {
+          name  = "AWS_XRAY_TRACING_NAME"
+          value = "auth-service"
+        },
       ]
 
       portMappings = [
@@ -61,7 +69,7 @@ resource "aws_ecs_task_definition" "auth" {
           appProtocol   = "http"
         }
       ]
-      
+
       logConfiguration = {
         logDriver = "awslogs"
 
@@ -71,6 +79,18 @@ resource "aws_ecs_task_definition" "auth" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
+    },
+    {
+      name      = "xray-daemon"
+      image     = "public.ecr.aws/xray/aws-xray-daemon:3.6.7"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 2000
+          protocol      = "udp"
+        }
+      ]
     }
   ])
 
@@ -125,6 +145,14 @@ resource "aws_ecs_task_definition" "order" {
           name  = "REDIS_PORT"
           value = tostring(var.redis_port)
         },
+        {
+          name  = "AWS_XRAY_DAEMON_ADDRESS"
+          value = "127.0.0.1:2000"
+        },
+        {
+          name  = "AWS_XRAY_TRACING_NAME"
+          value = "order-service"
+        },
       ]
 
       portMappings = [
@@ -146,6 +174,18 @@ resource "aws_ecs_task_definition" "order" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
+    },
+    {
+      name      = "xray-daemon"
+      image     = "public.ecr.aws/xray/aws-xray-daemon:3.6.7"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 2000
+          protocol      = "udp"
+        }
+      ]
     }
   ])
 
@@ -179,7 +219,15 @@ resource "aws_ecs_task_definition" "notify" {
         {
           name  = "SNS_TOPIC_ARN"
           value = aws_sns_topic.order_notifications.arn
-        }
+        },
+        {
+          name  = "AWS_XRAY_DAEMON_ADDRESS"
+          value = "127.0.0.1:2000"
+        },
+        {
+          name  = "AWS_XRAY_TRACING_NAME"
+          value = "notify-service"
+        },
       ]
 
       portMappings = [
@@ -201,6 +249,18 @@ resource "aws_ecs_task_definition" "notify" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
+    },
+    {
+      name      = "xray-daemon"
+      image     = "public.ecr.aws/xray/aws-xray-daemon:3.6.7"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 2000
+          protocol      = "udp"
+        }
+      ]
     }
   ])
 
@@ -216,14 +276,14 @@ resource "aws_ecs_service" "auth" {
 
   desired_count = var.desired_count
   launch_type   = "FARGATE"
-  
+
   deployment_controller {
     type = "ECS"
   }
-  
+
   deployment_configuration {
-    strategy                = "BLUE_GREEN"
-    bake_time_in_minutes    = 5
+    strategy             = "BLUE_GREEN"
+    bake_time_in_minutes = 5
   }
 
   network_configuration {
@@ -245,7 +305,7 @@ resource "aws_ecs_service" "auth" {
         port     = 80
       }
     }
- }
+  }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.auth.arn
@@ -270,15 +330,15 @@ resource "aws_ecs_service" "order" {
   task_definition = aws_ecs_task_definition.order.arn
 
   desired_count = var.desired_count
-  launch_type      = "FARGATE"
+  launch_type   = "FARGATE"
 
   deployment_controller {
     type = "ECS"
   }
 
   deployment_configuration {
-    strategy                = "BLUE_GREEN"
-    bake_time_in_minutes    = 5
+    strategy             = "BLUE_GREEN"
+    bake_time_in_minutes = 5
   }
 
   network_configuration {
@@ -325,15 +385,15 @@ resource "aws_ecs_service" "notify" {
   task_definition = aws_ecs_task_definition.notify.arn
 
   desired_count = var.desired_count
-  launch_type      = "FARGATE"
-  
+  launch_type   = "FARGATE"
+
   deployment_controller {
-  type = "ECS"
+    type = "ECS"
   }
 
   deployment_configuration {
-    strategy                = "BLUE_GREEN"
-    bake_time_in_minutes    = 5
+    strategy             = "BLUE_GREEN"
+    bake_time_in_minutes = 5
   }
 
   network_configuration {

@@ -35,7 +35,7 @@ resource "aws_cloudwatch_event_rule" "order_created" {
   event_bus_name = aws_cloudwatch_event_bus.main.name
 
   event_pattern = jsonencode({
-    source = ["order-service"]
+    source        = ["order-service"]
     "detail-type" = ["OrderCreated"]
   })
 }

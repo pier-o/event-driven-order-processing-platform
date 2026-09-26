@@ -168,3 +168,18 @@ resource "aws_iam_role_policy" "auth_secretsmanager" {
     ]
   })
 }
+
+resource "aws_iam_role_policy_attachment" "auth_xray" {
+  role       = aws_iam_role.auth_task.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "order_xray" {
+  role       = aws_iam_role.order_task.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "notify_xray" {
+  role       = aws_iam_role.notify_task.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}

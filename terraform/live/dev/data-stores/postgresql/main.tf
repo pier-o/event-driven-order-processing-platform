@@ -25,10 +25,10 @@ data "terraform_remote_state" "security" {
 module "postgresql" {
   source = "../../../../modules/data-stores/postgresql"
 
-  name = "order-platform-dev"
+  name        = "order-platform-dev"
   db_name     = "order_platform"
   db_username = "order_platform_admin"
-  
-  private_subnet_ids = data.terraform_remote_state.networking.outputs.private_subnet_ids
+
+  private_subnet_ids         = data.terraform_remote_state.networking.outputs.private_subnet_ids
   postgres_security_group_id = data.terraform_remote_state.security.outputs.postgres_security_group_id
 }

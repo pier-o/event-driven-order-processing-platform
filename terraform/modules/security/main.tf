@@ -1,7 +1,7 @@
 # ALB
 resource "aws_security_group" "alb" {
-  name = "${var.name}-alb-sg"
-  vpc_id      = var.vpc_id
+  name   = "${var.name}-alb-sg"
+  vpc_id = var.vpc_id
 
   tags = {
     Name = "${var.name}-alb-sg"
@@ -12,20 +12,20 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   type              = "ingress"
   security_group_id = aws_security_group.alb.id
 
-  from_port         = local.port_http
-  to_port           = local.port_http
-  protocol          = local.protocol_tcp
-  cidr_blocks        = local.cidr_all
+  from_port   = local.port_http
+  to_port     = local.port_http
+  protocol    = local.protocol_tcp
+  cidr_blocks = local.cidr_all
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
   type              = "egress"
   security_group_id = aws_security_group.alb.id
 
-  from_port         = local.port_all
-  to_port           = local.port_all
-  protocol          = local.protocol_all
-  cidr_blocks        = local.cidr_all
+  from_port   = local.port_all
+  to_port     = local.port_all
+  protocol    = local.protocol_all
+  cidr_blocks = local.cidr_all
 }
 
 # PostgreSQL
@@ -40,8 +40,8 @@ resource "aws_security_group" "postgres" {
 }
 
 resource "aws_security_group_rule" "postgres_ingress" {
-  type              = "ingress"
-  security_group_id = aws_security_group.postgres.id
+  type                     = "ingress"
+  security_group_id        = aws_security_group.postgres.id
   source_security_group_id = aws_security_group.ecs.id
 
   from_port = local.port_postgres

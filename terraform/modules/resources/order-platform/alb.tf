@@ -3,8 +3,8 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   internal           = false
 
-  subnets            = var.public_subnet_ids
-  security_groups    = [var.alb_security_group_id]
+  subnets         = var.public_subnet_ids
+  security_groups = [var.alb_security_group_id]
 
   enable_deletion_protection = var.enable_deletion_protection
 
@@ -51,7 +51,7 @@ resource "aws_lb_target_group" "order" {
   port        = local.port_http
   protocol    = local.protocol_http
   vpc_id      = var.vpc_id
-  
+
   health_check {
     path                = "/api/order/health"
     protocol            = local.protocol_http
@@ -83,7 +83,7 @@ resource "aws_lb_target_group" "notify" {
   port        = local.port_http
   protocol    = local.protocol_http
   vpc_id      = var.vpc_id
-  
+
   health_check {
     path                = "/api/notify/health"
     protocol            = local.protocol_http
@@ -111,8 +111,8 @@ resource "aws_lb_target_group" "notify_green" {
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
-  port = local.port_http
-  protocol = local.protocol_http
+  port              = local.port_http
+  protocol          = local.protocol_http
 
   default_action {
     type = "fixed-response"
@@ -129,16 +129,16 @@ resource "aws_lb_listener_rule" "auth" {
   listener_arn = aws_lb_listener.http.arn
 
   action {
-    type             = "forward"
+    type = "forward"
 
     forward {
       target_group {
-        arn = aws_lb_target_group.auth.arn
+        arn    = aws_lb_target_group.auth.arn
         weight = 100
       }
 
       target_group {
-        arn = aws_lb_target_group.auth_green.arn
+        arn    = aws_lb_target_group.auth_green.arn
         weight = 0
       }
     }

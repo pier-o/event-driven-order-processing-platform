@@ -13,7 +13,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public_a" {
-  vpc_id = aws_vpc.main.id
+  vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[0]
 
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
@@ -24,7 +24,7 @@ resource "aws_subnet" "public_a" {
 }
 
 resource "aws_subnet" "public_b" {
-  vpc_id = aws_vpc.main.id
+  vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[1]
 
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 2)
@@ -35,7 +35,7 @@ resource "aws_subnet" "public_b" {
 }
 
 resource "aws_subnet" "private_a" {
-  vpc_id = aws_vpc.main.id
+  vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[0]
 
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 3)
@@ -46,7 +46,7 @@ resource "aws_subnet" "private_a" {
 }
 
 resource "aws_subnet" "private_b" {
-  vpc_id = aws_vpc.main.id
+  vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[1]
 
   cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 4)
@@ -57,7 +57,7 @@ resource "aws_subnet" "private_b" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id 
+  vpc_id = aws_vpc.main.id
 
   tags = {
     Name = "${var.vpc_name}-igw"
@@ -141,7 +141,7 @@ resource "aws_eip" "nat_b" {
 
 resource "aws_nat_gateway" "nat_a" {
   allocation_id = aws_eip.nat_a.id
-  subnet_id = aws_subnet.public_a.id
+  subnet_id     = aws_subnet.public_a.id
 
   tags = {
     Name = "${var.vpc_name}-nat-a"
@@ -152,7 +152,7 @@ resource "aws_nat_gateway" "nat_a" {
 
 resource "aws_nat_gateway" "nat_b" {
   allocation_id = aws_eip.nat_b.id
-  subnet_id = aws_subnet.public_b.id
+  subnet_id     = aws_subnet.public_b.id
 
   tags = {
     Name = "${var.vpc_name}-nat-b"

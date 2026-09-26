@@ -1,19 +1,19 @@
 output "vpc_id" {
   description = "The VPC ID"
-  value =module.networking.vpc_id
+  value       = module.networking.vpc_id
 }
 
 output "public_subnet_ids" {
   description = "The IDs of the public subnets"
-  value = module.networking.public_subnet_ids
+  value       = module.networking.public_subnet_ids
 }
 
 output "private_subnet_ids" {
   description = "The IDs of the private subnets"
-  value = module.networking.private_subnet_ids
+  value       = module.networking.private_subnet_ids
 }
 
 output "private_route_table_ids" {
   description = "The IDs of the route tables"
-  value = module.networking.private_route_table_ids
+  value       = module.networking.private_route_table_ids
 }

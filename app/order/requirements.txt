@@ -3,3 +3,4 @@ gunicorn>=22,<24
 boto3>=1.40,<2.0
 psycopg[binary]>=3.2,<4.0
 redis>=8.1,<9.0
+aws-xray-sdk==2.15.0

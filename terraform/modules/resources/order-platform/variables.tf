@@ -4,8 +4,8 @@ variable "name" {
 }
 
 variable "vpc_id" {
-  description = "The VPC ID"  
-  type = string
+  description = "The VPC ID"
+  type        = string
 }
 
 variable "public_subnet_ids" {
@@ -21,7 +21,7 @@ variable "private_subnet_ids" {
 # ALB
 variable "alb_security_group_id" {
   description = "The ID of the ALB"
-  type = string
+  type        = string
 }
 
 variable "enable_deletion_protection" {
@@ -138,12 +138,12 @@ variable "redis_port" {
 }
 
 locals {
-  port_http    = 80
-  port_all     = 0
+  port_http = 80
+  port_all  = 0
 
-  protocol_tcp   = "tcp"
-  protocol_http  = "HTTP"
-  protocol_all   = "-1"
+  protocol_tcp  = "tcp"
+  protocol_http = "HTTP"
+  protocol_all  = "-1"
 
   target_ip = "ip"
   cidr_all  = ["0.0.0.0/0"]

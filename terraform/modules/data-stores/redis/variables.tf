@@ -10,7 +10,7 @@ variable "private_subnet_ids" {
 
 variable "redis_security_group_id" {
   description = "Redis Security Group ID"
-  type = string
+  type        = string
 }
 
 variable "node_type" {
@@ -20,8 +20,8 @@ variable "node_type" {
 }
 
 locals {
-  redis_port  = 6379
-  port_all    = 0
+  redis_port   = 6379
+  port_all     = 0
   protocol_tcp = "tcp"
   protocol_all = "-1"
   cidr_all     = ["0.0.0.0/0"]

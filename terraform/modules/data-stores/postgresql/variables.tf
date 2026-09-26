@@ -21,7 +21,7 @@ variable "db_username" {
 
 variable "postgres_security_group_id" {
   description = "Postgres Security Group ID"
-  type = string
+  type        = string
 }
 
 variable "instance_class" {
@@ -32,16 +32,16 @@ variable "instance_class" {
 
 variable "allocated_storage" {
   description = "The Storage of the DB (e.g., 10G)"
-  type = number
-  default = 10
+  type        = number
+  default     = 10
 }
 
 locals {
-  postgres_port    = 5432
-  any_port         = 0
+  postgres_port = 5432
+  any_port      = 0
 
-  protocol_tcp     = "tcp"
-  protocol_all     = "-1"
+  protocol_tcp = "tcp"
+  protocol_all = "-1"
 
-  cidr_all         = ["0.0.0.0/0"]
+  cidr_all = ["0.0.0.0/0"]
 }

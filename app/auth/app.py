@@ -7,13 +7,24 @@ import uuid
 import boto3
 import psycopg
 import redis
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError
 from botocore.exceptions import BotoCoreError, ClientError
 from flask import Flask, jsonify, request
 from psycopg.errors import UniqueViolation
+from aws_xray_sdk.core import patch_all, xray_recorder
+from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 
 app = Flask(__name__)
+
+patch_all()
+
+xray_recorder.configure(
+    service=os.getenv("AWS_XRAY_TRACING_NAME", "auth-service")
+)
+
+XRayMiddleware(app, xray_recorder)
 
 # AWS clients
 secrets_manager = boto3.client("secretsmanager")
@@ -29,7 +40,7 @@ REDIS_HOST = os.environ["REDIS_HOST"]
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
 # Session configuration
-SESSION_TTL_SECONDS = 900
+SESSION_TTL_SECONDS = 3600
 
 _db_credentials = None
 
@@ -361,12 +372,4 @@ def auth():
         "message": "Auth service v6 is running"
     })
 
-
 init_db()
-
-
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=80
-    )

@@ -15,6 +15,6 @@ data "terraform_remote_state" "postgresql" {
 module "iam" {
   source = "../../../modules/iam"
 
-  name = "order-platform-dev"
+  name          = "order-platform-dev"
   db_secret_arn = data.terraform_remote_state.postgresql.outputs.master_user_secret_arn
 }

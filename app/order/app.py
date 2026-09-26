@@ -10,8 +10,18 @@ import psycopg
 from botocore.exceptions import BotoCoreError, ClientError
 from flask import Flask, jsonify, request
 from psycopg.types.json import Jsonb
+from aws_xray_sdk.core import patch_all, xray_recorder
+from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 
 app = Flask(__name__)
+
+patch_all()
+
+xray_recorder.configure(
+    service=os.getenv("AWS_XRAY_TRACING_NAME", "order-service")
+)
+
+XRayMiddleware(app, xray_recorder)
 
 eventbridge = boto3.client("events")
 secrets_manager = boto3.client("secretsmanager")
