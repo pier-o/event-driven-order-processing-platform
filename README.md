@@ -93,9 +93,9 @@ The Application Load Balancer uses path-based routing to send requests to the co
 
 For example:
 
-- `/api/auth` → Auth TG
-- `/api/order` → Orders TG
-- `/api/notify` → Notifications TG
+- `/api/auth` -> Auth TG
+- `/api/order` -> Orders TG
+- `/api/notify` -> Notifications TG
 
 Each target group routes requests to the corresponding Fargate Tasks. ALB health checks help ensure that traffic is sent only to healthy tasks.
 
