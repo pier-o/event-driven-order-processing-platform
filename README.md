@@ -16,6 +16,7 @@ The platform is designed for high availability, scalability, secure communicatio
 - [CI/CD & Blue/Green Deployment](#cicd--bluegreen-deployment)
 - [Infrastructure as Code](#infrastructure-as-code)
   - [Terraform](#terraform)
+  - [Terraform Implementation](#terraform-implementation)
   - [Terraform Deployment Order](#terraform-deployment-order)
   - [Docker Images and ECR](#docker-images-and-ecr)
   - [Order Platform Deployment](#order-platform-deployment)
