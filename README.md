@@ -255,8 +255,10 @@ Terraform variables are supplied through environment variables such as `TF_VAR_a
 
 Each root uses the same S3 bucket with a different state key.
 
+### Terraform Implementation
+
 <details>
-<summary><strong>Terraform implementation</strong></summary>
+<summary><strong>Show Terraform commands</strong></summary>
 
 ### Prerequest
 
@@ -496,8 +498,11 @@ The worker processes notifications independently from the Flask API, so notifica
 ### End-to-End Flow
 
 The user first registers, and the Auth Service stores the account in PostgreSQL. After login, a bearer token is returned and the session is stored in Redis for one hour.
+
+### Application Testing
+
 <details>
-<summary><strong>Application testing</strong></summary>
+<summary><strong>Show testing commands</strong></summary>
 
 The application can be tested through PowerShell because there is no frontend.
 
