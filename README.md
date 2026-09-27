@@ -211,8 +211,8 @@ If the new version has a problem during the deployment, traffic can be shifted b
 ## Infrastructure as Code
 
 The platform is managed with **Terraform** and split into separate roots, each with its own state:
-![alt text](./diagrams/screens/project.png)
 
+![alt text](./diagrams/screens/project.png)
 
 Reusable modules are stored in:
 
@@ -291,6 +291,7 @@ $env:TF_BACKEND_REGION = $env:TF_VAR_aws_region
 ### S3
 
 First, we will create the bucket, so open terraform/live/global/s3/terraform.tf: `backend` is commented out
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20064128.png)
 
 Then:
@@ -303,12 +304,14 @@ terraform -chdir=terraform/live/global/s3 apply -auto-approve
 ```
 
 Then store the generated bucket name in an environment variable.
+
 ```PowerShell
 $env:TF_VAR_terraform_state_bucket = terraform -chdir=terraform/live/global/s3 output -raw state_bucket_name
 $env:TF_BACKEND_BUCKET = $env:TF_VAR_terraform_state_bucket
 ```
 
 Now uncomment the S3 backend:
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20064226.png)
 
 And migrate the local state:
@@ -320,6 +323,7 @@ terraform -chdir=terraform/live/global/s3 init -migrate-state `
 ```
 
 Now Copy and paste all of these into Powershell:
+
 ```PowerShell
 # IAM
 terraform -chdir=terraform/live/global/iam init `
@@ -415,6 +419,7 @@ The final application infrastructure is deployed from:
 ```text
 terraform/live/dev/resources/order-platform
 ```
+
 It result of 
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20051518.png)
 
@@ -480,6 +485,7 @@ The user first registers, and the Auth Service stores the account in PostgreSQL.
 The application can be tested through PowerShell because there is no frontend.
 
 Before testing, confirm the SNS email subscription from the confirmation email in the spam folder.
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20052416.png)
 
 ```PowerShell
@@ -490,6 +496,7 @@ $BaseUrl = "http://$ALB_DNS"
 ```
 
 First, register in the application; it will register you with the email you set before
+
 ```PowerShell
 # REGISTER
 $Email    = $env:TF_VAR_notification_email
@@ -506,6 +513,7 @@ Output:
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053419.png)
 
 Then you will log in
+
 ```PowerShell
 # LOGIN
 $LoginBody = @{
@@ -522,6 +530,7 @@ $Login = Invoke-RestMethod `
 $Login | ConvertTo-Json
 ```
 Output:
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053349.png)
 
 Store the token; the token will be stored on your device and keep you logged in to the application for 1 hour. After that, you need to sign in again.
@@ -541,9 +550,11 @@ Invoke-RestMethod `
     -Headers $Headers
 ```
 Output:
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053419.png)
 
 Then you will create the order and send it; feel free to change the order 
+
 ```PowerShell
 # CREATE ORDER
 $OrderBody = @{
@@ -570,9 +581,11 @@ $OrderResponse = Invoke-RestMethod `
 $OrderResponse | ConvertTo-Json -Depth 5
 ```
 Output:
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053731.png)
 
 You can check your order
+
 ```PowerShell
 # Store the order ID
 $OrderId = $OrderResponse.order.order_id
@@ -585,10 +598,13 @@ $RetrievedOrder = Invoke-RestMethod `
 
 $RetrievedOrder | ConvertTo-Json -Depth 5
 ```
+
 Output: 
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053840.png)
 
 And finally you can logout
+
 ```Powershell
 # LOGOUT
 Invoke-RestMethod `
@@ -596,12 +612,15 @@ Invoke-RestMethod `
     -Method Post `
     -Headers $Headers
 ```
+
 Output:
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053931.png)
 
 This test covers registration, login, Redis session validation, order creation, order retrieval, and logout. After the order is created, the notification should travel through EventBridge, SQS, the notification worker, and SNS before reaching the confirmed email subscriber.
 
 You will receive the order in your email:
+
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20052432.png)
 
 </details>
