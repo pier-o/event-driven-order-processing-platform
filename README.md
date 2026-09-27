@@ -6,6 +6,25 @@ The Event-Driven Order Processing Platform provides a containerized backend for 
 
 The platform is designed for high availability, scalability, secure communication, persistent data storage, and centralized monitoring. Infrastructure is managed with Terraform, while GitHub Actions automates container builds and ECS deployments using blue/green releases.
 
+## Table of Contents
+
+- [Solution Overview](#solution-overview)
+- [Microservices](#microservices)
+- [AWS Services](#aws-services)
+- [Architecture](#architecture)
+- [Event-Driven Order Processing](#event-driven-order-processing)
+- [CI/CD & Blue/Green Deployment](#cicd--bluegreen-deployment)
+- [Infrastructure as Code](#infrastructure-as-code)
+  - [Terraform](#terraform)
+  - [Terraform Deployment Order](#terraform-deployment-order)
+  - [Docker Images and ECR](#docker-images-and-ecr)
+  - [Order Platform Deployment](#order-platform-deployment)
+- [Application](#application)
+  - [Auth Service](#auth-service)
+  - [Orders Service](#orders-service)
+  - [Notifications Service](#notifications-service)
+  - [Application Testing](#application-testing)
+ 
 ## Microservices
 
 - **Auth Service:** Handles user authentication, authorization, and session management.
