@@ -211,10 +211,8 @@ If the new version has a problem during the deployment, traffic can be shifted b
 ## Infrastructure as Code
 
 The platform is managed with **Terraform** and split into separate roots, each with its own state:
+![alt text](./diagrams/screens/project.png)
 
-```text
-![alt text](./diagrams/project.png)
-```
 
 Reusable modules are stored in:
 
@@ -265,20 +263,6 @@ Default output format: json
 aws sts get-caller-identity
 ```
 
-### Apply or Plan
-
-The main Terraform inputs are passed through environment variables.
-
-```PowerShell
-$StateBucket = terraform -chdir=terraform/live/global/s3 output -raw state_bucket_name
-$env:TF_VAR_terraform_state_bucket = $StateBucket
-$env:TF_BACKEND_BUCKET = $StateBucket
-
-$env:TF_VAR_aws_region = "eu-west-1"
-$env:TF_VAR_notification_email = "example@gmail.com"
-$env:TF_VAR_image_tag = "v1"
-```
-
 ### Setup
 
 A shared Terraform provider cache allows multiple Terraform roots to reuse the same downloaded providers.
@@ -286,7 +270,6 @@ A shared Terraform provider cache allows multiple Terraform roots to reuse the s
 #### Shared Cache
 
 ```PowerShell
-> these to cache the provider of terraform
 $CacheDir = (Join-Path $HOME ".terraform.d\plugin-cache").Replace('\','/')
 
 New-Item -ItemType Directory -Force $CacheDir | Out-Null
@@ -295,6 +278,8 @@ Set-Content -Path "$env:APPDATA\terraform.rc" -Value "plugin_cache_dir = `"$Cach
 ```
 
 ### Envs
+
+Put your email, and feel free to modify it as you like.
 
 ```PowerShell
 $env:TF_VAR_aws_region = "eu-west-1"
@@ -305,101 +290,84 @@ $env:TF_BACKEND_REGION = $env:TF_VAR_aws_region
 
 ### S3
 
-The state bucket is created first with local state because the remote backend does not exist yet.
+First, we will create the bucket, so open terraform/live/global/s3/terraform.tf: `backend` is commented out
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20064128.png)
+
+Then:
+
+NOTE: Run all the commands from the root folder, so the "event-driven-order-processing-platform/"
 
 ```PowerShell
 terraform -chdir=terraform/live/global/s3 init
 terraform -chdir=terraform/live/global/s3 apply -auto-approve
 ```
 
-Then the generated bucket name is stored for the other roots.
-
+Then store the generated bucket name in an environment variable.
 ```PowerShell
 $env:TF_VAR_terraform_state_bucket = terraform -chdir=terraform/live/global/s3 output -raw state_bucket_name
 $env:TF_BACKEND_BUCKET = $env:TF_VAR_terraform_state_bucket
 ```
 
-After enabling the S3 backend, migrate the local state:
+Now uncomment the S3 backend:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20064226.png)
+
+And migrate the local state:
 
 ```PowerShell
-### Uncommet terraform.tf
 terraform -chdir=terraform/live/global/s3 init -migrate-state `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 ```
 
-### IAM
-
+Now Copy and paste all of these into Powershell:
 ```PowerShell
+# IAM
 terraform -chdir=terraform/live/global/iam init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/global/iam apply -auto-approve
-```
 
-### ECR
 
-```PowerShell
+# ECR
 terraform -chdir=terraform/live/global/ecr init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/global/ecr apply -auto-approve
-```
 
-### Docker Images
-
-```PowerShell
+# Docker Images
 ./scripts/push-images.ps1
-```
 
-### Networking
-
-```PowerShell
+# Networking
 terraform -chdir=terraform/live/dev/networking init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/dev/networking apply -auto-approve
-```
 
-### Security
-
-```PowerShell
+# Security
 terraform -chdir=terraform/live/dev/security init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/dev/security apply -auto-approve
-```
 
-### PostgreSQL
-
-```PowerShell
+# PostgreSQL
 terraform -chdir=terraform/live/dev/data-stores/postgresql init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/dev/data-stores/postgresql apply -auto-approve
-```
 
-### Dev_IAM
-
-```PowerShell
+# Dev_IAM
 terraform -chdir=terraform/live/dev/iam init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/dev/iam apply -auto-approve
-```
 
-### Redis
-
-```PowerShell
+# Redis
 terraform -chdir=terraform/live/dev/data-stores/redis init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
 terraform -chdir=terraform/live/dev/data-stores/redis apply -auto-approve
-```
 
-### Order-Platform
-
-```PowerShell
+# Order-Platform
 terraform -chdir=terraform/live/dev/resources/order-platform init `
   -backend-config="bucket=$env:TF_BACKEND_BUCKET" `
   -backend-config="region=$env:TF_BACKEND_REGION"
@@ -447,10 +415,12 @@ The final application infrastructure is deployed from:
 ```text
 terraform/live/dev/resources/order-platform
 ```
+It result of 
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20051518.png)
 
 `image_tag` selects the container version, while `notification_email` is used for the SNS email subscription.
 
-Example:
+Example (don't run it):
 
 ```powershell
 terraform -chdir=terraform/live/dev/resources/order-platform apply `
@@ -459,7 +429,9 @@ terraform -chdir=terraform/live/dev/resources/order-platform apply `
   -var="notification_email=your-email@example.com"
 ```
 
-The SNS subscription must be confirmed from the email before notifications can be delivered.
+The SNS subscription must be confirmed via email before notifications can be delivered.
+
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20051651.png)
 
 ### Why Separate Terraform Roots?
 
@@ -485,55 +457,22 @@ The Auth Service handles registration, login, and sessions.
 
 The Orders Service creates and retrieves orders.
 
-When an authenticated user creates an order:
-
-```text
-Bearer token
-     ↓
-Redis session check
-     ↓
-PostgreSQL stores order
-     ↓
-EventBridge receives OrderCreated
-```
+When an authenticated user creates an order, the service first checks the bearer token against the Redis session. If the session is valid, the order is stored in PostgreSQL and an `OrderCreated` event is published to EventBridge.
 
 Order items are stored as JSONB in PostgreSQL.
 
 ### Notifications Service
 
-The Notifications Service runs a background worker that continuously polls SQS.
+The Notifications Service runs a background worker that continuously polls the SQS queue.
 
-```text
-SQS
- ↓
-Notification worker
- ↓
-SNS
- ↓
-Email subscriber
-```
+When a message is received, the worker processes the order event and publishes a notification to the SNS topic. SNS then delivers the notification to the configured email subscriber.
 
-The worker processes notifications independently from the Flask API.
+The worker processes notifications independently from the Flask API, so notification processing does not block normal API requests.
 
 ### End-to-End Flow
 
-```text
-Register → PostgreSQL
-        ↓
-Login → Redis session
-        ↓
-Create order
-        ↓
-PostgreSQL + EventBridge
-        ↓
-SQS
-        ↓
-Notification worker
-        ↓
-SNS
-        ↓
-Email
-```
+The user first registers, and the Auth Service stores the account in PostgreSQL. After login, a bearer token is returned and the session is stored in Redis for one hour.
+
 
 <details>
 <summary><strong>Application testing</strong></summary>
@@ -541,23 +480,33 @@ Email
 The application can be tested through PowerShell because there is no frontend.
 
 Before testing, confirm the SNS email subscription from the confirmation email in the spam folder.
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20052416.png)
 
 ```PowerShell
+# Getting the URL of the application 
 $ALB_DNS = terraform -chdir=terraform/live/dev/resources/order-platform output -raw alb_dns_name
 
 $BaseUrl = "http://$ALB_DNS"
+```
 
+First, register in the application; it will register you with the email you set before
+```PowerShell
+# REGISTER
 $Email    = $env:TF_VAR_notification_email
 $Password = "TestPassword123!"
 
-# REGISTER
 $RegisterBody = @{ email = $Email password = $Password } | ConvertTo-Json
 
 $Register = Invoke-RestMethod ` -Uri "$BaseUrl/api/auth/register" ` -Method Post ` -ContentType "application/json" ` -Body $RegisterBody
 
 $Register | ConvertTo-Json
-# you wil get that you regestred and you will have user id
+```
 
+Output:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20053419.png)
+
+Then you will log in
+```PowerShell
 # LOGIN
 $LoginBody = @{
     email    = $Email
@@ -571,7 +520,13 @@ $Login = Invoke-RestMethod `
     -Body $LoginBody
 
 $Login | ConvertTo-Json
+```
+Output:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20053349.png)
 
+Store the token; the token will be stored on your device and keep you logged in to the application for 1 hour. After that, you need to sign in again.
+
+```PowerShell
 # Store the Token
 $Token = $Login.token
 
@@ -584,7 +539,12 @@ Invoke-RestMethod `
     -Uri "$BaseUrl/api/auth/me" `
     -Method Get `
     -Headers $Headers
+```
+Output:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20053419.png)
 
+Then you will create the order and send it; feel free to change the order 
+```PowerShell
 # CREATE ORDER
 $OrderBody = @{
     items = @(
@@ -608,7 +568,12 @@ $OrderResponse = Invoke-RestMethod `
     -Body $OrderBody
 
 $OrderResponse | ConvertTo-Json -Depth 5
+```
+Output:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20053731.png)
 
+You can check your order
+```PowerShell
 # Store the order ID
 $OrderId = $OrderResponse.order.order_id
 
@@ -619,15 +584,25 @@ $RetrievedOrder = Invoke-RestMethod `
     -Headers $Headers
 
 $RetrievedOrder | ConvertTo-Json -Depth 5
+```
+Output: 
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20053840.png)
 
+And finally you can logout
+```Powershell
 # LOGOUT
 Invoke-RestMethod `
     -Uri "$BaseUrl/api/auth/logout" `
     -Method Post `
     -Headers $Headers
 ```
+Output:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20053931.png)
 
 This test covers registration, login, Redis session validation, order creation, order retrieval, and logout. After the order is created, the notification should travel through EventBridge, SQS, the notification worker, and SNS before reaching the confirmed email subscriber.
+
+You will receive the order in your email:
+![alt text](./diagrams/screens/Screenshot%202026-09-27%20052432.png)
 
 </details>
 
