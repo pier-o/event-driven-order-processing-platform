@@ -1,3 +1,7 @@
+provider "aws" {
+  region = var.aws_region
+}
+
 resource "aws_iam_role" "ecs_execution" {
   name = "order-platform-ecs-execution-role"
 

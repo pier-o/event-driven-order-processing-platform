@@ -2,11 +2,16 @@ provider "aws" {
   region = var.aws_region
 }
 
+resource "random_id" "state_suffix" {
+  byte_length = 4
+}
+
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "event-driven-state-ammar-manara"
+  bucket = "event-driven-order-platform-state-${random_id.state_suffix.hex}"
+  force_destroy = true
 
   lifecycle {
-    prevent_destroy = true
+    # prevent_destroy = true
   }
 }
 

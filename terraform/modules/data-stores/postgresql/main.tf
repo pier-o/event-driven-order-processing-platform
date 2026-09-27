@@ -3,7 +3,6 @@ resource "aws_db_instance" "postgres" {
 
   db_name = var.db_name
   engine  = "postgres"
-
   instance_class    = var.instance_class
   allocated_storage = var.allocated_storage
 
@@ -14,7 +13,10 @@ resource "aws_db_instance" "postgres" {
   vpc_security_group_ids = [var.postgres_security_group_id]
 
   publicly_accessible = false
-  skip_final_snapshot = true
+  
+  skip_final_snapshot   = true
+  delete_automated_backups = true
+  deletion_protection   = false
 
   tags = {
     Name = "${var.name}-postgres"

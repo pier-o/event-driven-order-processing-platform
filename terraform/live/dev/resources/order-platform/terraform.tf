@@ -9,9 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "event-driven-state-ammar-manara"
     key          = "dev/resources/order-platform/terraform.tfstate"
-    region       = "eu-west-1"
     use_lockfile = true
     encrypt      = true
   }
