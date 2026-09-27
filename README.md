@@ -239,7 +239,7 @@ Each root uses the same S3 bucket with a different state key.
 <details>
 <summary><strong>Terraform implementation</strong></summary>
 
-### Setup
+### Prerequest
 
 Before building and pushing the application images, verify that the required tools are installed and Docker Desktop is running.
 
@@ -477,8 +477,6 @@ The worker processes notifications independently from the Flask API, so notifica
 ### End-to-End Flow
 
 The user first registers, and the Auth Service stores the account in PostgreSQL. After login, a bearer token is returned and the session is stored in Redis for one hour.
-
-
 <details>
 <summary><strong>Application testing</strong></summary>
 
@@ -488,6 +486,10 @@ Before testing, confirm the SNS email subscription from the confirmation email i
 
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20052416.png)
 
+---
+
+### 1. Get the application URL
+
 ```PowerShell
 # Getting the URL of the application 
 $ALB_DNS = terraform -chdir=terraform/live/dev/resources/order-platform output -raw alb_dns_name
@@ -495,7 +497,11 @@ $ALB_DNS = terraform -chdir=terraform/live/dev/resources/order-platform output -
 $BaseUrl = "http://$ALB_DNS"
 ```
 
-First, register in the application; it will register you with the email you set before
+---
+
+### 2. Register
+
+First, register in the application; it will register you with the email you set before.
 
 ```PowerShell
 # REGISTER
@@ -509,10 +515,9 @@ $Register = Invoke-RestMethod ` -Uri "$BaseUrl/api/auth/register" ` -Method Post
 $Register | ConvertTo-Json
 ```
 
-Output:
-![alt text](./diagrams/screens/Screenshot%202026-09-27%20053419.png)
+---
 
-Then you will log in
+### 3. Login
 
 ```PowerShell
 # LOGIN
@@ -529,11 +534,10 @@ $Login = Invoke-RestMethod `
 
 $Login | ConvertTo-Json
 ```
-Output:
 
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053349.png)
 
-Store the token; the token will be stored on your device and keep you logged in to the application for 1 hour. After that, you need to sign in again.
+Store the returned token in the PowerShell session. The token is used to authenticate requests, while the corresponding server-side session is stored in Redis with a 1-hour TTL.
 
 ```PowerShell
 # Store the Token
@@ -549,11 +553,12 @@ Invoke-RestMethod `
     -Method Get `
     -Headers $Headers
 ```
-Output:
 
-![alt text](./diagrams/screens/Screenshot%202026-09-27%20053419.png)
+---
 
-Then you will create the order and send it; feel free to change the order 
+### 4. Create an order
+
+Then you will create the order and send it; feel free to change the order.
 
 ```PowerShell
 # CREATE ORDER
@@ -580,11 +585,14 @@ $OrderResponse = Invoke-RestMethod `
 
 $OrderResponse | ConvertTo-Json -Depth 5
 ```
-Output:
 
 ![alt text](./diagrams/screens/Screenshot%202026-09-27%20053731.png)
 
-You can check your order
+---
+
+### 5. Retrieve the order
+
+You can check your order:
 
 ```PowerShell
 # Store the order ID
@@ -599,11 +607,11 @@ $RetrievedOrder = Invoke-RestMethod `
 $RetrievedOrder | ConvertTo-Json -Depth 5
 ```
 
-Output: 
+---
 
-![alt text](./diagrams/screens/Screenshot%202026-09-27%20053840.png)
+### 6. Logout
 
-And finally you can logout
+And finally you can logout:
 
 ```Powershell
 # LOGOUT
@@ -613,11 +621,13 @@ Invoke-RestMethod `
     -Headers $Headers
 ```
 
-Output:
+---
 
-![alt text](./diagrams/screens/Screenshot%202026-09-27%20053931.png)
+This test covers registration, login, Redis session validation, order creation, order retrieval, and logout.
 
-This test covers registration, login, Redis session validation, order creation, order retrieval, and logout. After the order is created, the notification should travel through EventBridge, SQS, the notification worker, and SNS before reaching the confirmed email subscriber.
+After the order is created, the notification travels through EventBridge, SQS, the notification worker, and SNS before reaching the confirmed email subscriber.
+
+### Notification
 
 You will receive the order in your email:
 
